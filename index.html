@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EnglishCoach - Auto-évaluation & Pratique de l'Anglais</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Barre de navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-900 leading-tight">EnglishCoach</h1>
+                    <p class="text-xs text-slate-500">Assistant d'auto-évaluation & correction</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="runDemoScenario()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+                    <span>Exemple de démonstration</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Bannière de bienvenue pour débutants -->
+        <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-2xl p-6 text-white shadow-md">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold mb-1">Bienvenue dans votre espace d'entraînement ! 👋</h2>
+                    <p class="text-indigo-100 text-sm leading-relaxed max-w-2xl">
+                        Ne vous inquiétez pas si vous faites des fautes : c'est le meilleur moyen d'apprendre. Choisissez un sujet ci-dessous, exprimez-vous en anglais à l'oral ou à l'écrit, et recevez une correction bienveillante avec des conseils précis en français.
+                    </p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm px-4 py-3 rounded-xl border border-white/20 shrink-0">
+                    <div class="text-xs text-indigo-200 uppercase font-semibold tracking-wider">Votre niveau actuel</div>
+                    <div class="text-lg font-bold flex items-center gap-2 mt-0.5">
+                        <span id="userLevelBadge">Débutant (A1-A2)</span>
+                        <i class="fa-solid fa-seedling text-emerald-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Colonne de gauche : Consigne & Saisie -->
+            <div class="lg:col-span-6 space-y-6">
+                
+                <!-- Étape 1 : Choix du sujet -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Étape 1 : Choisissez un sujet</span>
+                        <button onclick="nextPrompt()" class="text-xs text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1 transition">
+                            <i class="fa-solid fa-arrows-rotate"></i> Autre sujet
+                        </button>
+                    </div>
+                    <h3 id="promptTitleFr" class="font-bold text-slate-900 text-base mb-1">Se présenter simplement</h3>
+                    <p id="promptDescFr" class="text-sm text-slate-600 mb-3">Dites comment vous vous appelez, quel est votre métier et ce que vous aimez faire.</p>
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-xs text-slate-500">
+                        <span class="font-semibold text-slate-700"><i class="fa-regular fa-lightbulb text-amber-500 mr-1"></i> Aide pour démarrer :</span>
+                        <span id="promptHintFr" class="italic">"Hello, my name is... I work as a... I like..."</span>
+                    </div>
+                </div>
+
+                <!-- Étape 2 : Expression orale ou écrite -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Étape 2 : Exprimez-vous en anglais</span>
+                        <span id="charCount" class="text-xs text-slate-400">0 mot</span>
+                    </div>
+
+                    <!-- Zone de texte -->
+                    <div class="relative">
+                        <textarea id="userInput" rows="4" 
+                            class="w-full rounded-xl border border-slate-300 p-4 text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition resize-none text-base"
+                            placeholder="Écrivez votre phrase en anglais ici, ou cliquez sur le micro ci-dessous pour parler..."></textarea>
+                        
+                        <button onclick="clearInput()" title="Effacer le texte" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 p-1">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Contrôles Micro & Analyse -->
+                    <div class="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                        <button id="micBtn" onclick="toggleRecording()" 
+                            class="w-full sm:w-auto flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-3 px-4 rounded-xl border border-slate-300 transition flex items-center justify-center gap-2">
+                            <i id="micIcon" class="fa-solid fa-microphone text-red-500"></i>
+                            <span id="micText">Parler (Micro)</span>
+                        </button>
+
+                        <button onclick="analyzeEnglish()" 
+                            class="w-full sm:w-auto flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-check-double"></i>
+                            <span>Corriger mon anglais</span>
+                        </button>
+                    </div>
+                    <p id="speechStatus" class="text-xs text-center text-slate-500 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Colonne de droite : Résultats & Conseils -->
+            <div class="lg:col-span-6">
+                
+                <!-- État initial vide -->
+                <div id="emptyState" class="bg-white rounded-2xl p-8 border border-slate-200 border-dashed h-full flex flex-col items-center justify-center text-center space-y-3 min-h-[380px]">
+                    <div class="w-14 h-14 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center text-2xl mb-1">
+                        <i class="fa-solid fa-comments"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">En attente de votre phrase</h3>
+                    <p class="text-sm text-slate-500 max-w-sm">
+                        Rédigez ou prononcez une phrase en anglais à gauche, puis cliquez sur <strong>"Corriger mon anglais"</strong> pour obtenir votre évaluation détaillée.
+                    </p>
+                </div>
+
+                <!-- État des résultats -->
+                <div id="resultState" class="hidden space-y-5">
+                    
+                    <!-- Carte Score & Niveau -->
+                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Évaluation globale</span>
+                            <h3 id="feedbackTitle" class="text-lg font-bold text-slate-900 mt-0.5">Très bon effort !</h3>
+                            <p id="feedbackSubtitle" class="text-xs text-slate-500">Quelques petits ajustements pour sonner plus naturel.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <div class="text-2xl font-extrabold text-indigo-600"><span id="scoreValue">85</span>%</div>
+                                <div class="text-[11px] font-medium text-slate-400">Précision</div>
+                            </div>
+                            <div id="scoreCircle" class="w-12 h-12 rounded-full bg-indigo-50 border-2 border-indigo-500 flex items-center justify-center text-indigo-600 font-bold">
+                                A2
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carte Correction en Anglais + Audio -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
+                                <i class="fa-solid fa-spell-check mr-1"></i> Version corrigée (En anglais)
+                            </span>
+                            <button onclick="speakCorrection()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-volume-high"></i>
+                                <span>Écouter la prononciation</span>
+                            </button>
+                        </div>
+
+                        <div class="p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+                            <p id="correctedText" class="text-lg font-semibold text-slate-900 leading-relaxed"></p>
+                        </div>
+
+                        <!-- Détail des corrections (Explications en français) -->
+                        <div class="space-y-2.5 pt-2">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-500">Explications des corrections (en français) :</h4>
+                            <ul id="explanationsList" class="space-y-2 text-sm text-slate-700">
+                                <!-- Injecté dynamiquement -->
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Carte Conseils personnalisés pour progresser -->
+                    <div class="bg-amber-50/80 rounded-2xl p-5 border border-amber-200/80 space-y-2">
+                        <div class="flex items-center gap-2 text-amber-800 font-bold text-sm">
+                            <i class="fa-solid fa-star text-amber-500"></i>
+                            <span>Conseils du coach pour vous améliorer</span>
+                        </div>
+                        <p id="coachAdvice" class="text-sm text-amber-900/90 leading-relaxed"></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Pied de page -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+        <div class="max-w-5xl mx-auto px-4 text-center text-xs text-slate-400">
+            Outil pédagogique interactif d'auto-évaluation en anglais • Saisie vocale & synthèse audio intégrées
+        </div>
+    </footer>
+
+    <script>
+        // Base de sujets guidés en français
+        const prompts = [
+            {
+                title: "Se présenter simplement",
+                desc: "Dites comment vous vous appelez, quel est votre métier et ce que vous aimez faire.",
+                hint: "Hello, my name is... I work as a... I like..."
+            },
+            {
+                title: "Parler de sa journée de travail",
+                desc: "Expliquez ce que vous faites habituellement au bureau ou sur votre lieu de travail.",
+                hint: "Every day, I start work at... I check my emails and..."
+            },
+            {
+                title: "Commander au restaurant",
+                desc: "Demandez poliment un plat et une boisson à un serveur.",
+                hint: "Hello, I would like to order... Can I have a glass of... please?"
+            },
+            {
+                title: "Parler de ses projets du week-end",
+                desc: "Dites ce que vous allez faire samedi ou dimanche prochain.",
+                hint: "This weekend, I am going to visit... I want to rest..."
+            }
+        ];
+
+        let currentPromptIndex = 0;
+        let recognition = null;
+        let isRecording = false;
+        let currentCorrectedEnglish = "";
+
+        // Initialisation de la reconnaissance vocale (Web Speech API)
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = false;
+
+            recognition.onstart = () => {
+                isRecording = true;
+                const micBtn = document.getElementById('micBtn');
+                const micIcon = document.getElementById('micIcon');
+                const micText = document.getElementById('micText');
+                const status = document.getElementById('speechStatus');
+                
+                micBtn.classList.add('bg-red-50', 'border-red-300', 'text-red-700');
+                micIcon.classList.add('pulse-ring');
+                micText.textContent = "Écoute en cours... (Parlez en anglais)";
+                status.textContent = "Parlez clairement dans votre microphone...";
+                status.classList.remove('hidden');
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('userInput').value = transcript;
+                updateWordCount();
+            };
+
+            recognition.onerror = (event) => {
+                stopRecordingUI();
+                const status = document.getElementById('speechStatus');
+                status.textContent = "Erreur micro : vérifiez que l'accès au microphone est autorisé dans votre navigateur.";
+                status.classList.remove('hidden');
+            };
+
+            recognition.onend = () => {
+                stopRecordingUI();
+            };
+        }
+
+        function toggleRecording() {
+            if (!recognition) {
+                alert("La reconnaissance vocale n'est pas supportée sur ce navigateur. Utilisez Google Chrome ou Microsoft Edge, ou tapez votre texte directement.");
+                return;
+            }
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopRecordingUI() {
+            isRecording = false;
+            const micBtn = document.getElementById('micBtn');
+            const micIcon = document.getElementById('micIcon');
+            const micText = document.getElementById('micText');
+            const status = document.getElementById('speechStatus');
+
+            micBtn.classList.remove('bg-red-50', 'border-red-300', 'text-red-700');
+            micIcon.classList.remove('pulse-ring');
+            micText.textContent = "Parler (Micro)";
+            status.classList.add('hidden');
+        }
+
+        function nextPrompt() {
+            currentPromptIndex = (currentPromptIndex + 1) % prompts.length;
+            const p = prompts[currentPromptIndex];
+            document.getElementById('promptTitleFr').textContent = p.title;
+            document.getElementById('promptDescFr').textContent = p.desc;
+            document.getElementById('promptHintFr').textContent = p.hint;
+        }
+
+        const userInputEl = document.getElementById('userInput');
+        userInputEl.addEventListener('input', updateWordCount);
+
+        function updateWordCount() {
+            const text = userInputEl.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            document.getElementById('charCount').textContent = words + (words > 1 ? " mots" : " mot");
+        }
+
+        function clearInput() {
+            userInputEl.value = "";
+            updateWordCount();
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('resultState').classList.add('hidden');
+        }
+
+        // Moteur d'analyse grammaticale et pédagogique
+        function analyzeEnglish() {
+            const rawText = userInputEl.value.trim();
+            if (!rawText) {
+                alert("Veuillez d'abord écrire ou prononcer une phrase en anglais !");
+                return;
+            }
+
+            let corrected = rawText;
+            let explanations = [];
+            let score = 95;
+
+            // Règles pédagogiques courantes pour francophones débutants
+            const rules = [
+                {
+                    regex: /\bi\b/g,
+                    replace: "I",
+                    msg: "En anglais, le pronom <strong>« I »</strong> (je) s'écrit toujours avec une majuscule, même au milieu d'une phrase.",
+                    penalty: 5
+                },
+                {
+                    regex: /\bi am (\d+) years\b/gi,
+                    replace: "I am $1 years old",
+                    msg: "Pour donner son âge, on ajoute toujours <strong>« old »</strong> à la fin (ex: <em>I am 25 years old</em>) et on utilise le verbe <em>to be</em> (être) au lieu d'avoir.",
+                    penalty: 10
+                },
+                {
+                    regex: /\bi have (\d+) years( old)?\b/gi,
+                    replace: "I am $1 years old",
+                    msg: "Attention au calque du français ! En anglais, on ne dit pas <em>« J'ai X ans »</em> (I have), mais <strong>« Je suis âgé de X ans »</strong> (<em>I am $1 years old</em>).",
+                    penalty: 12
+                },
+                {
+                    regex: /\bhe go\b/gi,
+                    replace: "he goes",
+                    msg: "Au présent simple avec <em>he / she / it</em>, il ne faut pas oublier le <strong>« -s »</strong> (ou <em>-es</em>) à la fin du verbe.",
+                    penalty: 10
+                },
+                {
+                    regex: /\bshe go\b/gi,
+                    replace: "she goes",
+                    msg: "Au présent simple avec <em>he / she / it</em>, ajoutez <strong>« -es »</strong> au verbe <em>go</em> → <em>she goes</em>.",
+                    penalty: 10
+                },
+                {
+                    regex: /\bhe have\b/gi,
+                    replace: "he has",
+                    msg: "Avec <em>he / she / it</em>, le verbe <em>have</em> devient <strong>« has »</strong>.",
+                    penalty: 10
+                },
+                {
+                    regex: /\bshe have\b/gi,
+                    replace: "she has",
+                    msg: "Avec <em>he / she / it</em>, le verbe <em>have</em> devient <strong>« has »</strong>.",
+                    penalty: 10
+                },
+                {
+                    regex: /\bi am agree\b/gi,
+                    replace: "I agree",
+                    msg: "<em>Agree</em> est déjà un verbe en anglais ! On dit simplement <strong>« I agree »</strong> (et non <em>I am agree</em>).",
+                    penalty: 10
+                },
+                {
+                    regex: /\bfor explain\b/gi,
+                    replace: "to explain",
+                    msg: "Pour exprimer un but (« pour faire quelque chose »), on utilise <strong>« to + verbe »</strong> (<em>to explain</em>) plutôt que <em>for</em>.",
+                    penalty: 8
+                },
+                {
+                    regex: /\byesterday i go\b/gi,
+                    replace: "yesterday I went",
+                    msg: "Puisque l'action s'est passée hier (<em>yesterday</em>), il faut utiliser le prétérit : <strong>« went »</strong> (passé de <em>go</em>).",
+                    penalty: 12
+                },
+                {
+                    regex: /\bi work like a\b/gi,
+                    replace: "I work as a",
+                    msg: "Pour parler de sa profession (« je travaille comme... »), on utilise la préposition <strong>« as »</strong> (<em>I work as a...</em>).",
+                    penalty: 8
+                }
+            ];
+
+            rules.forEach(rule => {
+                if (rule.regex.test(corrected)) {
+                    corrected = corrected.replace(rule.regex, rule.replace);
+                    explanations.push(rule.msg);
+                    score -= rule.penalty;
+                }
+            });
+
+            // Majuscule en début de phrase et ponctuation finale
+            corrected = corrected.charAt(0).toUpperCase() + corrected.slice(1);
+            if (!/[.!?]$/.test(corrected)) {
+                corrected += ".";
+            }
+
+            // Si aucune erreur spécifique n'a été détectée
+            if (explanations.length === 0) {
+                explanations.push("Votre structure de phrase est claire et compréhensible ! Aucune erreur grammaticale majeure détectée.");
+                if (rawText.split(/\s+/).length < 5) {
+                    explanations.push("Astuce : Essayez d'allonger un peu votre phrase avec des mots de liaison comme <em>because</em> (parce que) ou <em>and</em> (et).");
+                    score = 90;
+                } else {
+                    score = 98;
+                }
+            }
+
+            score = Math.max(45, score);
+            currentCorrectedEnglish = corrected;
+
+            // Affichage des résultats
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('resultState').classList.remove('hidden');
+
+            document.getElementById('correctedText').textContent = corrected;
+            document.getElementById('scoreValue').textContent = score;
+
+            // Niveau estimé
+            let level = "A1";
+            if (score >= 90 && rawText.split(/\s+/).length >= 8) level = "B1";
+            else if (score >= 80) level = "A2";
+            document.getElementById('scoreCircle').textContent = level;
+
+            // Titre d'encouragement
+            const titleEl = document.getElementById('feedbackTitle');
+            const subEl = document.getElementById('feedbackSubtitle');
+            if (score >= 90) {
+                titleEl.textContent = "Excellent travail ! 🌟";
+                subEl.textContent = "Votre phrase est naturelle et bien construite.";
+            } else if (score >= 75) {
+                titleEl.textContent = "Très bon effort ! 👍";
+                subEl.textContent = "On vous comprend très bien. Voici quelques détails à affiner.";
+            } else {
+                titleEl.textContent = "Bon début, continuez ! 💪";
+                subEl.textContent = "Chaque erreur corrigée vous fait progresser rapidement.";
+            }
+
+            // Liste des explications
+            const listEl = document.getElementById('explanationsList');
+            listEl.innerHTML = "";
+            explanations.forEach(exp => {
+                const li = document.createElement('li');
+                li.className = "flex items-start gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100";
+                li.innerHTML = `<i class="fa-solid fa-circle-info text-indigo-500 mt-1 shrink-0"></i><span>${exp}</span>`;
+                listEl.appendChild(li);
+            });
+
+            // Conseils personnalisés du coach
+            const adviceEl = document.getElementById('coachAdvice');
+            if (explanations.length > 1) {
+                adviceEl.innerHTML = "<strong>1. Écoutez et répétez :</strong> Cliquez sur le bouton <em>« Écouter la prononciation »</em> ci-dessus et répétez la phrase corrigée à voix haute 3 fois.<br><strong>2. Pensez directement en anglais :</strong> Évitez de traduire mot à mot depuis le français (surtout pour les verbes <em>être</em> et <em>avoir</em>).";
+            } else {
+                adviceEl.innerHTML = "<strong>Passez au niveau supérieur :</strong> Vous maîtrisez bien cette base ! Essayez maintenant d'ajouter une précision sur le temps (ex: <em>every morning</em>, <em>yesterday</em>) ou d'expliquer pourquoi vous faites cette action avec <em>because</em>.";
+            }
+        }
+
+        // Synthèse vocale (Text-to-Speech en anglais)
+        function speakCorrection() {
+            if (!currentCorrectedEnglish) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(currentCorrectedEnglish);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9; // Légèrement ralenti pour bien articuler pour un débutant
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert("La lecture vocale n'est pas disponible sur ce navigateur.");
+            }
+        }
+
+        // Bouton de démonstration instantanée pour la présentation
+        function runDemoScenario() {
+            const sampleText = "Hello, my name is Jean. i have 28 years and i work like a technician. Yesterday i go to the office for explain my project.";
+            userInputEl.value = sampleText;
+            updateWordCount();
+            analyzeEnglish();
+        }
+    </script>
+</body>
+</html>
